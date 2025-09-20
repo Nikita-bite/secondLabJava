@@ -3,12 +3,30 @@ package org.example;
 import java.util.*;
 import java.lang.Math;
 
+/**
+ * Вычислитель выражений.
+ *
+ * <p>
+ * Класс предоставляет собой вычислитель выражений с поддержкой функций sin(), cos() и переменных.
+ * <p>
+ * В классе есть один публичный метод {@code evaluate(String eval, Map<String, Double> variables)}, который парсит и вычисляет арифметические выражения из строк.
+ *
+ * @author Nikita Filippov
+ * @version 1.0
+ * @since 2025
+ */
 public class ExpressionEvaluator {
 
     public ExpressionEvaluator() {
 
     }
 
+    /**
+     * Проверяет валидность строки выражения.
+     *
+     * @param eval строка выражения.
+     * @return {@code true} - если строка валидна, иначе {@code false}.
+     */
     private static boolean isValidExpression(String eval) {
         eval = eval.replace(" ", "");
         int counterBrackets = 0;
@@ -39,7 +57,14 @@ public class ExpressionEvaluator {
         return true;
     }
 
-    private static  String replaceVariables(String eval, Map<String, Double> variables) {
+    /**
+     * Заменяет переменные в строке на их значения.
+     *
+     * @param eval строка выражения.
+     * @param variables мапа {название переменной: значение переменной}.
+     * @return строку с подстановкой переменных.
+     */
+    private static String replaceVariables(String eval, Map<String, Double> variables) {
         int len = eval.length();
         int counter = 0;
         Set<String> linkedSet = new LinkedHashSet<>();
@@ -90,6 +115,12 @@ public class ExpressionEvaluator {
         return eval;
     }
 
+    /**
+     * Является ли строка числом.
+     *
+     * @param str строка-кандидат.
+     * @return {@code true} - если число, иначе {@code false}.
+     */
     private static boolean isNumeric(String str) {
         try {
             Double.parseDouble(str);
@@ -99,6 +130,12 @@ public class ExpressionEvaluator {
         }
     }
 
+    /**
+     * Конвертирует строку в число если это возможно.
+     *
+     * @param str строка-кандидат.
+     * @return число типа {@code double}.
+     */
     private static double parseNumber(String str) {
         try {
             double number = Double.parseDouble(str.trim());
@@ -108,7 +145,13 @@ public class ExpressionEvaluator {
         }
     }
 
-    private static  String calculateFunctions(String eval) {
+    /**
+     * Заменяет функции с аргументом на их численные значения.
+     *
+     * @param eval строка, в которой могут быть функции {@code sin()}, {@code cos()}.
+     * @return строка без функций.
+     */
+    private static String calculateFunctions(String eval) {
         List<int[]> listOfStartAndEndEvals = new ArrayList<>();
         int len = eval.length();
         int counter = 0;
@@ -166,6 +209,12 @@ public class ExpressionEvaluator {
         return eval;
     }
 
+    /**
+     * Находит индекс первой самой глубокой открывающейся скобки.
+     *
+     * @param eval строка выражения.
+     * @return индекс скобки.
+     */
     private static int findIndexMaxDepthBrackets(String eval) {
         int maxDepthBrackets = 0;
         int counterBrackets = 0;
@@ -185,6 +234,12 @@ public class ExpressionEvaluator {
         return indexMaxDepthBrackets;
     }
 
+    /**
+     * Находит максимальную глубину открывающейся скобки.
+     *
+     * @param eval строка выражения.
+     * @return уровень вложенности.
+     */
     private static int findMaxDepthBrackets(String eval) {
         int maxDepthBrackets = 0;
         int counterBrackets = 0;
@@ -202,6 +257,13 @@ public class ExpressionEvaluator {
         return maxDepthBrackets;
     }
 
+    /**
+     * Находит ближайшую скобку по порядку слева направо от индекса {@code start}.
+     *
+     * @param eval строка выражения.
+     * @param start индекс символа, от которого начинается поиск.
+     * @return индекс скобки.
+     */
     private static int findNextCloseBracket(String eval, int start) {
         int j = start + 1;
         int len = eval.length();
@@ -216,10 +278,23 @@ public class ExpressionEvaluator {
         return j;
     }
 
+    /**
+     * Является ли {@code с} оператором.
+     *
+     * @param c проверяемый символ.
+     * @return {@code true} - если является оператором, иначе {@code false}.
+     */
     private static boolean isOperator(char c) {
         return c == '^' || c == '/' || c == '*' || c == '+' || c == '-';
     }
 
+    /**
+     * Извлекает число перед знаком операции.
+     *
+     * @param subEval подстрока, в которой нет скобок.
+     * @param i индекс символа операции.
+     * @return число.
+     */
     private static double extractFirstNumber(String subEval, int i) {
         int j = i - 1;
         if (j < 0) return 0;
@@ -243,6 +318,13 @@ public class ExpressionEvaluator {
         return parseNumber(numberStr);
     }
 
+    /**
+     * Находит индекс начала числа перед знаком операции.
+     *
+     * @param subEval подстрока, в которой нет скобок.
+     * @param i индекс символа операции.
+     * @return индекс первой цифры числа.
+     */
     private static int findStartIndexFirstNumber(String subEval, int i) {
         int j = i - 1;
         if (j < 0) return 0;
@@ -264,6 +346,13 @@ public class ExpressionEvaluator {
         return j + 1;
     }
 
+    /**
+     * Извлекает число после знака операции.
+     *
+     * @param subEval подстрока, в которой нет скобок.
+     * @param i индекс символа операции.
+     * @return число.
+     */
     private static double extractSecondNumber(String subEval, int i) {
         int j = i + 1;
         int len = subEval.length();
@@ -293,6 +382,13 @@ public class ExpressionEvaluator {
         return isNegative ? -result : result;
     }
 
+    /**
+     * Находит индекс начала числа после знака операции.
+     *
+     * @param subEval подстрока, в которой нет скобок.
+     * @param i индекс символа операции.
+     * @return индекс последней цифры числа.
+     */
     private static int findLastIndexSecondNumber(String subEval, int i) {
         int j = i + 1;
         int len = subEval.length();
@@ -316,6 +412,12 @@ public class ExpressionEvaluator {
         return j;
     }
 
+    /**
+     * Вычисляет выражение без скобок.
+     *
+     * @param subEval строка, в которой нет скобок.
+     * @return численный результат выражения.
+     */
     private static double evaluateSubEval(String subEval) {
         int[] opearations = {0, 0, 0, 0, 0};
         for (char c : subEval.toCharArray()) {
@@ -429,6 +531,12 @@ public class ExpressionEvaluator {
         return parseNumber(subEval);
     }
 
+    /**
+     * Вычисляет выражение без переменных.
+     *
+     * @param eval строка, в которой нет переменных.
+     * @return численный результат выражения.
+     */
     private static double evaluateWithoutVariables(String eval) {
         if (isNumeric(eval)) {
             return parseNumber(eval);
@@ -447,7 +555,12 @@ public class ExpressionEvaluator {
         return evaluateSubEval(eval);
     }
 
-
+    /**
+     * Вычисляет выражение из строки.
+     *
+     * @param eval строка.
+     * @return численный результат выражения.
+     */
     public static double evaluate(String eval, Map<String, Double> variables) {
         eval = eval.replace(" ", "");
         boolean isValid = isValidExpression(eval);
