@@ -4,4 +4,5 @@
 
 ## Пример работы
 Код примера лежит [здесь](https://github.com/Nikita-bite/secondLabJava/blob/main/src/main/java/org/example/Main.java).
+
 ![пример работы](images/image_for_readme.png)
