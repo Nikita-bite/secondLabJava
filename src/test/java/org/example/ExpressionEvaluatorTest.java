@@ -12,11 +12,13 @@ class ExpressionEvaluatorTest {
 
     private Map<String, Double> mapa;
     private Map<String, Double> mapa2;
+    private Map<String, Double> mapaE;
 
     @BeforeEach
     void setUp() {
         mapa = new HashMap<>();
         mapa2 = new HashMap<>();
+        mapaE = new HashMap<>();
     }
 
     @Test
@@ -133,4 +135,44 @@ class ExpressionEvaluatorTest {
 
         assertEquals(2.0, ExpressionEvaluator.evaluate("((((2))))", mapa));
     }
+
+    @Test
+    void testExtraFunctions() {
+        mapaE.put("e", 2.71828);
+        assertEquals(1.0, ExpressionEvaluator.evaluate("ln(e)", mapaE), 1e-5);
+        assertEquals(2.0, ExpressionEvaluator.evaluate("log(4)", mapaE), 1e-5);
+        assertEquals(0.0, ExpressionEvaluator.evaluate("ln(1)", mapaE), 1e-5);
+        assertEquals(0.0, ExpressionEvaluator.evaluate("log(1)", mapaE), 1e-5);
+        assertEquals(13.2877034416, ExpressionEvaluator.evaluate("ln(e^2) * log(100) / tan(45)", mapaE), 1e-4);
+        assertEquals(6.6438568625, ExpressionEvaluator.evaluate("cot(45) + log(100) - ln(e)", mapaE), 1e-4);
+        assertEquals(4.0, ExpressionEvaluator.evaluate("sin(90) + cos(0) + tan(45) + cot(45)", mapaE), 1e-4);
+    }
+
+    @Test
+    void testMathematicalExceptions() {
+        ArithmeticException exception1 = assertThrows(ArithmeticException.class,
+                () -> ExpressionEvaluator.evaluate("10 / 0", mapa));
+        assertTrue(exception1.getMessage().contains("Division by zero"));
+
+        ArithmeticException exception2 = assertThrows(ArithmeticException.class,
+                () -> ExpressionEvaluator.evaluate("tan(90)", mapa));
+        assertTrue(exception2.getMessage().contains("Тангенс не определен"));
+
+        ArithmeticException exception3 = assertThrows(ArithmeticException.class,
+                () -> ExpressionEvaluator.evaluate("cot(0)", mapa));
+        assertTrue(exception3.getMessage().contains("Котангенс не определен"));
+
+        ArithmeticException exception4 = assertThrows(ArithmeticException.class,
+                () -> ExpressionEvaluator.evaluate("ln(-5)", mapa));
+        assertTrue(exception4.getMessage().contains("Логарифм определен только для положительных чисел"));
+
+        ArithmeticException exception5 = assertThrows(ArithmeticException.class,
+                () -> ExpressionEvaluator.evaluate("log(-10)", mapa));
+        assertTrue(exception5.getMessage().contains("Логарифм определен только для положительных чисел"));
+
+        ArithmeticException exception6 = assertThrows(ArithmeticException.class,
+                () -> ExpressionEvaluator.evaluate("ln(0)", mapa));
+        assertTrue(exception6.getMessage().contains("Логарифм определен только для положительных чисел"));
+    }
+
 }

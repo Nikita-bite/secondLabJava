@@ -7,12 +7,12 @@ import java.lang.Math;
  * Вычислитель выражений.
  *
  * <p>
- * Класс предоставляет собой вычислитель выражений с поддержкой функций sin(), cos() и переменных.
+ * Класс предоставляет собой вычислитель выражений с поддержкой функций {@code sin()}, {@code cos()}, {@code tan()}, {@code cot()}, {@code log()}, {@code ln()} и переменных.
  * <p>
  * В классе есть один публичный метод {@code evaluate(String eval, Map<String, Double> variables)}, который парсит и вычисляет арифметические выражения из строк.
  *
  * @author Nikita Filippov
- * @version 1.0
+ * @version 1.1
  * @since 2025
  */
 public class ExpressionEvaluator {
@@ -68,6 +68,12 @@ public class ExpressionEvaluator {
         int len = eval.length();
         int counter = 0;
         Set<String> linkedSet = new LinkedHashSet<>();
+        String strsin = "sin";
+        String strcos = "cos";
+        String strtan = "tan";
+        String strcot = "cot";
+        String strlog = "log";
+        String strln = "ln";
         String varName = "";
         for (int i = 0; i < len; i++) {
             char c = eval.charAt(i);
@@ -77,7 +83,7 @@ public class ExpressionEvaluator {
                 varName = varName + c;
             } else {
                 if (counter > 0) {
-                    if (!varName.equals("sin") && !varName.equals("cos")) {
+                    if (!strsin.contains(varName) && !strcos.contains(varName) && !strtan.contains(varName) && !strcot.contains(varName) && !strlog.contains(varName) && !strln.contains(varName)) {
                         linkedSet.add(varName);
                     }
                     varName = "";
@@ -86,7 +92,7 @@ public class ExpressionEvaluator {
             }
         }
         if (!varName.isEmpty()) {
-            if (!varName.equals("sin") && !varName.equals("cos")) {
+            if (!strsin.contains(varName) && !strcos.contains(varName) && !strtan.contains(varName) && !strcot.contains(varName) && !strlog.contains(varName) && !strln.contains(varName)) {
                 linkedSet.add(varName);
             }
             varName = "";
@@ -148,7 +154,7 @@ public class ExpressionEvaluator {
     /**
      * Заменяет функции с аргументом на их численные значения.
      *
-     * @param eval строка, в которой могут быть функции {@code sin()}, {@code cos()}.
+     * @param eval строка, в которой могут быть функции {@code sin()}, {@code cos()}, {@code tan()}, {@code cot()}, {@code log()}, {@code ln()}.
      * @return строка без функций.
      */
     private static String calculateFunctions(String eval) {
@@ -158,13 +164,13 @@ public class ExpressionEvaluator {
         String varName = "";
         for (int i = 0; i < len; i++) {
             char c = eval.charAt(i);
-            boolean isLatinLetter = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '(' && varName.length() == 3);
+            boolean isLatinLetter = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '(' && (varName.length() == 3 || varName.equals("ln")));
             if (isLatinLetter) {
                 counter++;
                 varName = varName + c;
             } else {
                 if (counter > 0) {
-                    if (varName.equals("sin(") || varName.equals("cos(")) {
+                    if (varName.equals("sin(") || varName.equals("cos(") || varName.equals("tan(") || varName.equals("cot(") || varName.equals("log(") || varName.equals("ln(")) {
                         int j = i;
                         int counterBrackets = 1;
                         while (counterBrackets != 0) {
@@ -173,7 +179,7 @@ public class ExpressionEvaluator {
                             if (inner_c == '(') counterBrackets++;
                             if (inner_c == ')') counterBrackets--;
                         }
-                        listOfStartAndEndEvals.add(new int[]{i, j});
+                        listOfStartAndEndEvals.add(new int[]{i, j, varName.length()});
                     }
                     varName = "";
                 }
@@ -185,19 +191,41 @@ public class ExpressionEvaluator {
         int curElem = 0;
         for (int[] startAndEndEvals : listOfStartAndEndEvals) {
             String cutPart = eval.substring(startAndEndEvals[0], startAndEndEvals[1]);
-            String func = eval.substring(startAndEndEvals[0] - 4, startAndEndEvals[0] - 1);
+            String func = eval.substring(startAndEndEvals[0] - startAndEndEvals[2], startAndEndEvals[0] - 1);
             double resultOfArg = evaluateWithoutVariables(cutPart);
             double resultOfFunc = switch (func) {
                 case "sin" -> Math.sin(Math.toRadians(resultOfArg));
                 case "cos" -> Math.cos(Math.toRadians(resultOfArg));
+                case "tan" -> {
+                    double tanValue = Math.tan(Math.toRadians(resultOfArg));
+                    if (tanValue > 10e13) {
+                        throw new ArithmeticException("Тангенс не определен");
+                    }
+                    yield tanValue;
+                }
+                case "cot" -> {
+                    double tanValue = Math.tan(Math.toRadians(resultOfArg));
+                    if (tanValue == 0) {
+                        throw new ArithmeticException("Котангенс не определен");
+                    }
+                    yield 1.0 / tanValue;
+                }
+                case "ln" -> {
+                    if (resultOfArg <= 0) throw new ArithmeticException("Логарифм определен только для положительных чисел");
+                    yield Math.log(resultOfArg);
+                }
+                case "log" -> {
+                    if (resultOfArg <= 0) throw new ArithmeticException("Логарифм определен только для положительных чисел");
+                    yield Math.log(resultOfArg) / Math.log(2);
+                }
                 default -> resultOfArg;
             };
-            eval = eval.substring(0, startAndEndEvals[0] - 4) + parseNumber(String.valueOf(resultOfFunc)) + eval.substring(startAndEndEvals[1] + 1);
+            eval = eval.substring(0, startAndEndEvals[0] - startAndEndEvals[2]) + parseNumber(String.valueOf(resultOfFunc)) + eval.substring(startAndEndEvals[1] + 1);
             int curCorrection = 0;
             for (int[] startAndEndEvalsForCorrectionIndexes : listOfStartAndEndEvals) {
                 if (curElem <= curCorrection && startAndEndEvalsForCorrectionIndexes[1] > startAndEndEvals[1]) {
                     int resultOfArgLen = String.valueOf(parseNumber(String.valueOf(resultOfFunc))).length();
-                    int evalFuncLen = startAndEndEvals[1] + 1 - (startAndEndEvals[0] - 4);
+                    int evalFuncLen = startAndEndEvals[1] + 1 - (startAndEndEvals[0] - startAndEndEvals[2]);
                     int diff = evalFuncLen - resultOfArgLen;
                     startAndEndEvalsForCorrectionIndexes[1] = startAndEndEvalsForCorrectionIndexes[1] - diff;
                 }
@@ -563,6 +591,7 @@ public class ExpressionEvaluator {
      */
     public static double evaluate(String eval, Map<String, Double> variables) {
         eval = eval.replace(" ", "");
+        eval = eval.toLowerCase();
         boolean isValid = isValidExpression(eval);
         if (!isValid) {
             throw new IllegalArgumentException("expression is not correct.");
